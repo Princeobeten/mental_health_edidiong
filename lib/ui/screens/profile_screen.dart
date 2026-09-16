@@ -95,8 +95,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: ListTile(
                     leading: const Icon(Icons.admin_panel_settings_outlined),
                     title: const Text('Admin Panel'),
-                    subtitle:
-                        const Text('Manage users and view chatbot logs'),
+                    subtitle: const Text(
+                        'Stats, users, conversations and logs on this device'),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const AdminScreen()),

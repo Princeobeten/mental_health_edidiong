@@ -12,6 +12,7 @@ import '../../services/tts_service.dart';
 import '../widgets/crisis_banner.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/recording_wave.dart';
+import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -226,6 +227,16 @@ class _ChatScreenState extends State<ChatScreen> {
                 child: const Text('Male voice'),
               ),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Conversation history',
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const HistoryScreen()),
+              );
+              if (mounted) _scrollToBottom();
+            },
           ),
           IconButton(
             icon: const Icon(Icons.add),

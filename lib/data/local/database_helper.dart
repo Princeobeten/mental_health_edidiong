@@ -12,7 +12,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
 
   static const _dbName = 'mindful.db';
-  static const _dbVersion = 3;
+  static const _dbVersion = 4;
 
   Database? _db;
 
@@ -43,6 +43,9 @@ class DatabaseHelper {
     if (oldVersion < 3) {
       await _createUsersTable(db);
     }
+    if (oldVersion < 4) {
+      await _createArticlesTable(db);
+    }
   }
 
   Future<void> _createSettingsTable(Database db) async {
@@ -50,6 +53,23 @@ class DatabaseHelper {
       CREATE TABLE IF NOT EXISTS app_settings (
         key   TEXT PRIMARY KEY,
         value TEXT NOT NULL
+      )
+    ''');
+  }
+
+  /// Cache of articles pulled from external RSS feeds. Purely a cache — it is
+  /// wiped and rewritten on every refresh, and the app works without it.
+  Future<void> _createArticlesTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS articles (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        title      TEXT    NOT NULL,
+        summary    TEXT    NOT NULL,
+        link       TEXT    NOT NULL,
+        source     TEXT    NOT NULL,
+        topic      TEXT    NOT NULL,
+        published  TEXT    NOT NULL,
+        fetched_at TEXT    NOT NULL
       )
     ''');
   }
@@ -92,5 +112,6 @@ class DatabaseHelper {
 
     await _createSettingsTable(db);
     await _createUsersTable(db);
+    await _createArticlesTable(db);
   }
 }

@@ -7,6 +7,7 @@ import 'core/constants.dart';
 import 'data/local/database_helper.dart';
 import 'data/repositories/chat_repository.dart';
 import 'services/ai_service.dart';
+import 'services/article_service.dart';
 import 'services/auth_service.dart';
 import 'services/crisis_detector.dart';
 import 'services/settings_service.dart';
@@ -21,6 +22,7 @@ Future<void> main() async {
   final crisis = CrisisDetector();
   final settings = SettingsService(DatabaseHelper.instance);
   final auth = AuthService(DatabaseHelper.instance);
+  final articles = ArticleService(DatabaseHelper.instance);
 
   // Ensure the default admin account exists in the local database.
   await auth.seedDefaultAdmin();
@@ -30,6 +32,7 @@ Future<void> main() async {
     settings: settings,
     auth: auth,
     repo: repo,
+    articles: articles,
   ));
 }
 
@@ -38,6 +41,7 @@ class MindfulApp extends StatelessWidget {
   final SettingsService settings;
   final AuthService auth;
   final ChatRepository repo;
+  final ArticleService articles;
 
   const MindfulApp({
     super.key,
@@ -45,6 +49,7 @@ class MindfulApp extends StatelessWidget {
     required this.settings,
     required this.auth,
     required this.repo,
+    required this.articles,
   });
 
   @override
@@ -55,6 +60,7 @@ class MindfulApp extends StatelessWidget {
         Provider.value(value: settings),
         Provider.value(value: auth),
         Provider.value(value: repo),
+        Provider.value(value: articles),
       ],
       child: MaterialApp(
         title: AppConfig.appName,

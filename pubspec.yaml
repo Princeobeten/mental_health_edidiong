@@ -58,6 +58,11 @@ dependencies:
   # Password hashing for local accounts (login / register)
   crypto: ^3.0.5
 
+  # RSS parsing for the live articles in the Resources screen
+  xml: ^6.5.0
+  # Opens a fetched article in the device browser
+  url_launcher: ^6.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -18,6 +18,14 @@ how it maps to Chapters 1–3.
 - **Voice output** — a natural cloud voice (Groq Orpheus TTS) reads AI replies
   aloud; tap the speaker on any message, and spoken messages are auto-read.
 - Per-message **emotion / sentiment** tags returned by the model.
+- **Conversation history** — every chat is saved and can be reopened, renamed,
+  searched, or deleted from the history screen (🕘 in the chat app bar).
+  Conversations are auto-titled from your first message.
+- **Resources** — curated self-help *Guides* that always work offline, plus a
+  *Latest* tab of live articles pulled from public health/research RSS feeds and
+  cached on-device.
+- **Admin Panel** — an on-device dashboard with usage stats, sentiment
+  breakdown, user management, conversation transcripts, and filterable logs.
 - **Offline crisis detection** — local keyword screening runs before any network
   call and shows emergency helpline resources.
 - **Privacy-first** — all chat data is stored locally in SQLite.
@@ -83,6 +91,54 @@ flutter analyze    # static analysis (should report no issues)
   changing `aiBaseUrl` + `defaultModel` and using that provider's key.
 - Crisis helpline numbers in `constants.dart` are Nigeria-focused placeholders —
   update them for your region before any real demo.
+
+## Admin Panel
+
+**The admin dashboard is local, not remote.** There is no server: it reads the
+SQLite database on the device it is running on, so an admin sees only the users
+and activity of that install. Two phones running this app keep entirely separate
+data and never sync.
+
+Sign in with the default admin account, seeded into the local database on first
+launch (`AuthService.seedDefaultAdmin`):
+
+| Field    | Value                |
+|----------|----------------------|
+| Email    | `admin@mindful.app`  |
+| Password | `Admin@1234`         |
+
+The **first account to register** on a device also becomes an admin. Change
+`adminEmail` / `adminPassword` in
+[`lib/core/constants.dart`](lib/core/constants.dart) before any real deployment —
+these defaults are public in this repository.
+
+Open it from **Profile → Admin Panel** (only visible to admins). Tabs:
+
+- **Overview** — users, admins, conversations, messages, crisis flags, a
+  detected-emotion breakdown, and last activity.
+- **Users** — search, promote/revoke admin, reset a password, delete an account.
+  Guard rails prevent removing the last admin or deleting the account you are
+  signed in as.
+- **Conversations** — browse every conversation and read its full transcript.
+- **Logs** — recent messages, filterable by crisis / user / bot and searchable.
+
+## Live articles
+
+The Resources screen's **Latest** tab fetches from public RSS feeds, defined in
+`ArticleService.feeds` ([`lib/services/article_service.dart`](lib/services/article_service.dart)):
+
+| Topic       | Source                                    |
+|-------------|-------------------------------------------|
+| Anxiety     | ScienceDaily — Anxiety News                |
+| Stress      | ScienceDaily — Stress News                 |
+| Depression  | ScienceDaily — Depression News             |
+| Sleep       | ScienceDaily — Sleep Disorder News         |
+| Mindfulness | Mindful.org                                |
+
+Results are cached in SQLite for 6 hours and the tab falls back to the cached
+copy when offline. If every feed fails and nothing is cached, the tab shows an
+error and points the user at the offline **Guides** tab. To change sources, edit
+the `feeds` list — one dead feed does not blank the others.
 
 ## Project layout
 See [`IMPLEMENTATION_PLAN.md`](IMPLEMENTATION_PLAN.md) §5.

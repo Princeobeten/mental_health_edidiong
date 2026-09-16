@@ -53,5 +53,12 @@
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>
         </intent>
+        <!-- Resources: open a fetched article in the device browser.
+             Without this, Android 11+ hides browsers from the app and
+             url_launcher fails silently. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

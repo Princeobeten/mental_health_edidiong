@@ -146,8 +146,65 @@ class AuthService {
     return rows.map(AppUser.fromMap).toList();
   }
 
+  Future<int> countAdmins() async {
+    final db = await _dbHelper.database;
+    return Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM users WHERE is_admin = 1')) ??
+        0;
+  }
+
+  Future<AppUser?> getUser(int id) async {
+    final db = await _dbHelper.database;
+    final rows =
+        await db.query('users', where: 'id = ?', whereArgs: [id], limit: 1);
+    return rows.isEmpty ? null : AppUser.fromMap(rows.first);
+  }
+
+  /// Grants or revokes admin rights. Refuses to remove the last admin, which
+  /// would lock the Admin Panel away with no way back in.
+  Future<void> setAdmin(int id, bool isAdmin) async {
+    final db = await _dbHelper.database;
+    if (!isAdmin && await countAdmins() <= 1) {
+      throw AuthException(
+          'This is the only admin account — promote someone else first.');
+    }
+    await db.update('users', {'is_admin': isAdmin ? 1 : 0},
+        where: 'id = ?', whereArgs: [id]);
+  }
+
+  /// Sets a new password for a user (admin-initiated reset). Re-salts rather
+  /// than reusing the old salt, so the stored hash changes completely.
+  Future<void> resetPassword(int id, String newPassword) async {
+    if (newPassword.trim().length < 6) {
+      throw AuthException('Password must be at least 6 characters.');
+    }
+    final db = await _dbHelper.database;
+    final salt = _newSalt();
+    final updated = await db.update(
+      'users',
+      {'password_hash': _hash(newPassword, salt), 'salt': salt},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (updated == 0) throw AuthException('That account no longer exists.');
+  }
+
+  /// Deletes a user. Guards against removing the last admin or the account the
+  /// admin is currently signed in as.
   Future<void> deleteUser(int id) async {
     final db = await _dbHelper.database;
+
+    final me = await currentUser();
+    if (me?.id == id) {
+      throw AuthException('You cannot delete the account you are signed in as.');
+    }
+
+    final user = await getUser(id);
+    if (user == null) throw AuthException('That account no longer exists.');
+    if (user.isAdmin && await countAdmins() <= 1) {
+      throw AuthException('This is the only admin account and cannot be deleted.');
+    }
+
     await db.delete('users', where: 'id = ?', whereArgs: [id]);
   }
 }

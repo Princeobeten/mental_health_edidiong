@@ -21,6 +21,9 @@ class ChatController extends ChangeNotifier {
   List<ChatMessage> get messages => List.unmodifiable(_messages);
 
   ChatSession? _session;
+  ChatSession? get session => _session;
+  int? get sessionId => _session?.id;
+
   bool _isSending = false;
   bool get isSending => _isSending;
 
@@ -54,14 +57,42 @@ class ChatController extends ChangeNotifier {
 
   /// Starts a brand-new conversation with a warm greeting (the "+" button).
   Future<void> startSession() async {
-    _session = await _repo.createSession(
-      'Session ${DateTime.now().toLocal()}',
-    );
+    _session = await _repo.createSession(_untitled);
     _messages.clear();
     _crisisActive = false;
     _error = null;
     await _addGreeting();
     notifyListeners();
+  }
+
+  /// Placeholder title until the user's first message names the conversation.
+  static const String _untitled = 'New conversation';
+
+  /// Reopens an earlier conversation from the history screen.
+  Future<void> openSession(ChatSession session) async {
+    _session = session;
+    final history = await _repo.getMessages(session.id!);
+    _messages
+      ..clear()
+      ..addAll(history);
+    _crisisActive = _messages.any((m) => m.isCrisis);
+    _error = null;
+    if (_messages.isEmpty) await _addGreeting();
+    notifyListeners();
+  }
+
+  /// Names an untitled conversation after the user's opening message, so the
+  /// history list reads as content rather than as timestamps.
+  Future<void> _titleFromFirstMessage(String text) async {
+    if (_session == null || _session!.title != _untitled) return;
+    var title = text.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (title.length > 48) title = '${title.substring(0, 45)}...';
+    await _repo.renameSession(_session!.id!, title);
+    _session = ChatSession(
+      id: _session!.id,
+      title: title,
+      createdAt: _session!.createdAt,
+    );
   }
 
   Future<void> _addGreeting() async {
@@ -96,6 +127,7 @@ class ChatController extends ChangeNotifier {
       createdAt: DateTime.now(),
     ));
     _messages.add(userMsg);
+    await _titleFromFirstMessage(trimmed);
     notifyListeners();
 
     // 3) Ask the AI for an empathetic reply + detected emotion.
